@@ -1,0 +1,274 @@
+LINUX HEALTH MONITOR - PROJECT REPORT
+Prepared: 2 November 2026
+
+
+1. PROJECT SUMMARY
+
+Linux Health Monitor is a web dashboard that displays a current snapshot of the health and activity of a Linux computer. Six Bash scripts collect system information. A Flask application runs the scripts and exposes their output through a JSON API. The browser dashboard requests that API and presents the results in a responsive interface.
+
+The project can be run locally or deployed as a web service connected to a GitHub repository. It is suitable for learning, demonstrations, and basic system visibility. It is not a replacement for production monitoring platforms.
+
+
+2. PROJECT GOALS
+
+- Collect common Linux health information using small Bash scripts.
+- Present the information in a clear, responsive web dashboard.
+- Serve the page and API from the same host.
+- Support local use and cloud deployment.
+- Explain that a hosted dashboard monitors its server, not the computers visiting the website.
+
+
+3. FEATURES
+
+Resource dashboard:
+- CPU utilization, sampled over approximately one second.
+- Memory utilization, with used and total RAM.
+- Disk utilization, showing the highest usage found among reported filesystems.
+- Network interface count and interface names.
+- Horizontal utilization bars for CPU, memory, and disk.
+
+Host and activity details:
+- Hostname, operating system, kernel version, architecture, uptime, and current host date.
+- Top ten processes sorted by CPU usage, including user, command, CPU percent, and memory percent.
+- Total process count.
+
+Interaction and presentation:
+- Automatic refresh every ten seconds.
+- Manual refresh button.
+- Loading, connected, and disconnected status indicators.
+- Error notification when the API cannot be reached.
+- Responsive dark interface for desktop and mobile screens.
+
+The application does not save metric history, create alerts, or retain data between requests.
+
+
+4. ARCHITECTURE AND DATA FLOW
+
+The system follows this flow:
+
+Browser dashboard
+    -> GET /api/monitor
+    -> Flask application
+    -> Bash collector scripts
+    -> Linux /proc, /sys files and system commands
+    -> Script output returned as JSON
+    -> Browser parses and displays the results
+
+Detailed steps:
+1. Flask serves the dashboard page at /dashboard and frontend assets from the frontend directory.
+2. The root URL / redirects to /dashboard.
+3. The browser sends GET /api/monitor to the same server.
+4. Flask runs the six scripts in the scripts directory using Bash. Each script has a 15-second timeout.
+5. Flask captures script output and returns it with an application status and timestamp.
+6. JavaScript parses the output and updates the dashboard.
+
+The API runs the scripts sequentially. CPU collection waits one second between samples, so a typical API request takes at least about one second.
+
+
+5. PROJECT FILES
+
+backend/app.py
+  Flask app, web routes, list of monitor scripts, script execution, and API response.
+
+frontend/index.html
+  Dashboard page structure, resource cards, system details, process table, refresh button, and status.
+
+frontend/style.css
+  Dashboard colors, typography, layout, meters, tables, and responsive styling.
+
+frontend/script.js
+  API polling, response parsing, dashboard updates, status messages, and error handling.
+
+scripts/cpu_monitor.sh
+  Reads CPU counters from /proc/stat and calculates recent busy time.
+
+scripts/memory_monitor.sh
+  Reads RAM and swap information using free.
+
+scripts/disk_monitor.sh
+  Reads filesystem capacity using df, excluding tmpfs and devtmpfs.
+
+scripts/network_monitor.sh
+  Lists interface states and cumulative received/sent bytes from /sys/class/net. It uses ip when available and falls back to sysfs if ip is unavailable or restricted.
+
+scripts/process_monitor.sh
+  Lists the ten highest CPU-consuming processes and counts processes using ps.
+
+scripts/system_monitor.sh
+  Collects hostname, OS, kernel, architecture, uptime, and date.
+
+requirements.txt
+  Python dependencies: Flask and Gunicorn.
+
+render.yaml
+  Render web-service configuration, build and start commands, and API health check.
+
+.gitignore
+  Excludes Python caches, local virtual environments, environment files, logs, and editor/OS files from Git.
+
+README.md
+  Installation, deployment, API, troubleshooting, and security instructions.
+
+
+6. TECHNOLOGIES AND REQUIREMENTS
+
+Backend:
+- Python 3 and Flask serve the web page and JSON API.
+- Gunicorn runs the web application in deployment.
+- Python standard-library modules handle process execution, file paths, and timestamps.
+
+Frontend:
+- HTML provides the page structure.
+- CSS provides the responsive layout and visual style.
+- Vanilla JavaScript handles API requests, parsing, and page updates.
+- No frontend package manager or build process is needed.
+
+Linux requirements:
+- Linux operating system with Bash.
+- Linux /proc and /sys filesystems.
+- Common commands including awk, df, free, ps, hostname, uname, and uptime.
+- The ip command is optional; the network script has a fallback.
+
+Python packages are specified in requirements.txt:
+- Flask >= 3.0 and < 4.0.
+- Gunicorn >= 22.0 and < 24.0.
+
+
+7. COLLECTOR DETAILS
+
+CPU collector:
+Reads aggregate CPU counters from /proc/stat twice, approximately one second apart. It sums busy and idle counters and calculates the percentage of elapsed CPU time that was non-idle. If the counters cannot be compared, it reports that the value is unavailable.
+
+Memory collector:
+Uses free -m and awk to report total RAM, used RAM, available RAM, total swap, swap used, and RAM usage percentage. Memory values are in megabytes.
+
+Disk collector:
+Uses df -h to report filesystem source, size, used space, available space, percentage, and mount point. It omits tmpfs and devtmpfs. The dashboard uses the highest parsed filesystem percentage for its summary card.
+
+Network collector:
+Attempts to use ip -br addr for interface details. If that command is missing or restricted, it reads interface names and states from /sys/class/net. It also reports cumulative received and sent bytes converted to megabytes for non-loopback interfaces. These are totals since the counters were initialized, not instantaneous transfer rates.
+
+Process collector:
+Runs ps aux sorted by CPU use and returns the header plus ten process rows. It separately counts processes using ps -e.
+
+System collector:
+Reads hostname, PRETTY_NAME from /etc/os-release, kernel release, machine architecture, uptime, and the host's current date.
+
+
+8. HTTP ROUTES AND API
+
+GET /
+  Redirects to /dashboard.
+
+GET /dashboard
+  Serves the dashboard HTML document.
+
+GET /<path>
+  Serves frontend assets from the frontend directory.
+
+GET /api/monitor
+  Runs the configured collectors and returns their output as JSON.
+
+Example API response structure:
+
+{
+  "status": "success",
+  "timestamp": "2026-11-02 12:30:00",
+  "metrics": {
+    "cpu": { "output": "CPU Usage: 13.42%" },
+    "memory": { "output": "Total RAM: ..." },
+    "disk": { "output": "Filesystem ..." },
+    "network": { "output": "Network Interfaces: ..." },
+    "process": { "output": "USER PID ..." },
+    "system": { "output": "Hostname: ..." }
+  }
+}
+
+The API currently returns plain-text script output inside each output field, rather than normalized numeric fields. The frontend parses known output formats. Changes to script labels or output formats may require matching changes in frontend/script.js.
+
+
+9. LOCAL INSTALLATION AND USE
+
+From the project directory, run:
+
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install -r requirements.txt
+python3 backend/app.py
+
+Then open http://localhost:5000 in a browser. The page begins requesting metrics automatically. The API can be inspected directly at http://localhost:5000/api/monitor.
+
+Stop the server with Ctrl+C. The application uses the PORT environment variable when set; otherwise it listens on port 5000. For example:
+
+PORT=8000 python3 backend/app.py
+
+Open the page through the Flask server. Opening frontend/index.html directly from the file system will not start the backend.
+
+
+10. GITHUB AND LIVE DEPLOYMENT
+
+GitHub stores the project's source code. GitHub Pages only serves static files and cannot run Flask or the Bash scripts. A live dashboard therefore needs a Linux-capable web service to run the backend.
+
+The repository includes render.yaml for a Render Blueprint web service. It specifies:
+- Python runtime.
+- Free service plan.
+- Build command: pip install -r requirements.txt.
+- Gunicorn start command binding to the host-provided PORT.
+- Health-check path: /api/monitor.
+
+Deployment outline:
+1. Create a GitHub repository, preferably named linux-health-monitor.
+2. Commit and push the project files to the repository.
+3. Connect the GitHub repository to Render using New -> Blueprint.
+4. Review and create the web service defined by render.yaml.
+5. Wait for deployment and open the public Render URL.
+6. Confirm the dashboard says System connected and that metric cards are populated.
+
+Free web services may pause after inactivity. Open the service shortly before a presentation and allow it to start.
+
+IMPORTANT MONITORING BOUNDARY:
+The deployed dashboard reports the Linux service/container where Flask and the scripts run. On Render, this means the Render environment. It does not show processes or resource usage from the computers of people visiting the page. To monitor a particular Linux computer remotely, a monitoring backend or agent must run on that machine and connect securely to the dashboard.
+
+
+11. VALIDATION PERFORMED
+
+- All collector scripts passed Bash syntax checks with bash -n.
+- Python application source parsed successfully.
+- Flask test-client request to / returned HTTP 302 and redirected to /dashboard.
+- Flask test-client request to /dashboard returned HTTP 200.
+- Flask test-client request to /api/monitor returned HTTP 200 and status success.
+- The API returned all six metric keys: cpu, memory, disk, network, process, and system.
+- The network collector was checked in an environment where ip could not access netlink; the sysfs fallback still reported interfaces.
+
+These are local smoke checks, not a complete automated test suite. A browser interaction test and a deployment using a connected hosting account were not performed.
+
+
+12. LIMITATIONS AND SECURITY
+
+- Metrics are snapshots. There is no history database, chart history, or data retention.
+- The app does not provide alerting, thresholds, notifications, or user management.
+- The public API has no authentication. Anyone who can reach a public service can request its metrics.
+- Process users and commands, hostname, operating-system information, and resource usage may be exposed. Do not deploy on a sensitive or production host without adding access controls and reviewing exposed details.
+- Containers may virtualize or restrict system information. Results represent what the app's Linux environment can see and may differ from the physical server.
+- The scripts depend on Linux-specific files and tools and are not expected to work unchanged on macOS or Windows.
+- Collectors run sequentially, so the result is not a perfectly simultaneous snapshot.
+- The app is intended for demonstrations and basic monitoring, not hardened production use.
+- Free hosting can pause services after inactivity and delay the next request.
+
+
+13. POSSIBLE FUTURE IMPROVEMENTS
+
+- Return typed numeric JSON values instead of requiring the browser to parse formatted text.
+- Run collectors concurrently with controlled timeouts and per-metric error states.
+- Add a lightweight health endpoint that does not run all collectors.
+- Add automated tests for routes, parsing, response shape, and error handling.
+- Add authentication and authorization for public deployments.
+- Store time-series data and show historical charts.
+- Calculate network throughput by comparing consecutive byte counters.
+- Add configurable warning thresholds and notifications.
+- Add automated deployment checks and responsive browser tests.
+
+
+14. CONCLUSION
+
+Linux Health Monitor demonstrates a complete monitoring data path: Bash scripts read Linux data sources, Flask provides a web API, and a responsive browser dashboard presents the results. The project includes local setup instructions and a Render deployment definition, making it appropriate for a classroom or portfolio demonstration. A public deployment must be understood as reporting the service host's metrics, and access controls should be added before exposing private systems.

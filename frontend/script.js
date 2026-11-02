@@ -43,7 +43,7 @@ function renderMetrics(metrics) {
   const diskPercents = [...disk.matchAll(/\s(\d{1,3})%\s+\//g)].map((match) => Number(match[1]));
   const diskUsage = diskPercents.length ? Math.max(...diskPercents) : null;
   const diskCount = (disk.match(/^\/\S+/gm) || []).length;
-  metricValue("disk", diskUsage === null ? "—" : String(diskUsage), diskUsage === null ? "Usage unavailable" : `${diskCount} filesystem${diskCount === 1 ? "" : "s"} · root maximum`, diskUsage || 0);
+  metricValue("disk", diskUsage === null ? "—" : String(diskUsage), diskUsage === null ? "Usage unavailable" : `${diskCount} filesystem${diskCount === 1 ? "" : "s"} · highest usage`, diskUsage || 0);
 
   const network = metrics.network?.output || "";
   const interfaceLines = network.split("\n").filter((line) => /^\S+\s+(UP|DOWN|UNKNOWN)\s+/i.test(line) && !/^lo\s/i.test(line));
