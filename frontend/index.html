@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101827">
+  <title>System Overview · Linux Health</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <a class="brand" href="#overview" aria-label="Linux Health home">
+        <span class="brand-mark" aria-hidden="true">L<span>+</span></span>
+        <span><strong>Linux Health</strong><small>INFRASTRUCTURE</small></span>
+      </a>
+      <div class="nav-label">MONITORING</div>
+      <a class="nav-item active" href="#overview"><span class="nav-icon">▦</span>Overview</a>
+      <a class="nav-item" href="#resources"><span class="nav-icon">◉</span>Resources</a>
+      <a class="nav-item" href="#processes"><span class="nav-icon">≋</span>Processes</a>
+      <div class="sidebar-footer"><span class="live-dot"></span><span>Local host<br><small>Linux system</small></span><span class="host-menu">···</span></div>
+    </aside>
+
+    <main class="main-content" id="overview">
+      <header class="topbar">
+        <div class="breadcrumb">Monitoring <span>/</span> <strong>Overview</strong></div>
+        <div class="top-actions">
+          <span class="status-pill" id="status" role="status"><i></i><span>Connecting</span></span>
+          <button class="refresh-button" id="refresh" type="button"><span aria-hidden="true">↻</span> Refresh</button>
+        </div>
+      </header>
+
+      <section class="page-heading">
+        <div><p class="eyebrow">SYSTEM HEALTH</p><h1>System overview</h1><p class="subtitle">Live performance and resource utilization for your Linux host.</p></div>
+        <div class="updated-box"><span class="updated-label">LAST UPDATED</span><strong id="updated">Waiting for data</strong></div>
+      </section>
+
+      <section class="metric-grid" id="resources" aria-label="Resource metrics">
+        <article class="metric-card" data-metric="cpu">
+          <div class="metric-top"><span class="metric-title">CPU utilization</span><span class="metric-icon cpu-icon">◉</span></div>
+          <div class="metric-value" id="cpu-value">—<small>%</small></div>
+          <div class="meter"><span id="cpu-meter"></span></div>
+          <div class="metric-foot"><span id="cpu-label">Awaiting sample</span><span>PROCESSOR</span></div>
+        </article>
+        <article class="metric-card" data-metric="memory">
+          <div class="metric-top"><span class="metric-title">Memory usage</span><span class="metric-icon memory-icon">▤</span></div>
+          <div class="metric-value" id="memory-value">—<small>%</small></div>
+          <div class="meter"><span id="memory-meter"></span></div>
+          <div class="metric-foot"><span id="memory-label">Awaiting sample</span><span>RAM</span></div>
+        </article>
+        <article class="metric-card" data-metric="disk">
+          <div class="metric-top"><span class="metric-title">Disk utilization</span><span class="metric-icon disk-icon">▰</span></div>
+          <div class="metric-value" id="disk-value">—<small>%</small></div>
+          <div class="meter"><span id="disk-meter"></span></div>
+          <div class="metric-foot"><span id="disk-label">Awaiting sample</span><span>FILESYSTEM</span></div>
+        </article>
+        <article class="metric-card network-card">
+          <div class="metric-top"><span class="metric-title">Network interfaces</span><span class="metric-icon network-icon">⌁</span></div>
+          <div class="metric-value" id="network-value">—</div>
+          <div class="network-meta" id="network-label">Waiting for interface data</div>
+          <div class="metric-foot"><span>Interfaces detected</span><span>NETWORK</span></div>
+        </article>
+      </section>
+
+      <section class="detail-grid">
+        <article class="panel system-panel">
+          <div class="panel-heading"><div><p class="eyebrow">HOST DETAILS</p><h2>System information</h2></div><span class="panel-symbol">⌘</span></div>
+          <dl class="system-list" id="system"><div class="empty-state">System information will appear after the first successful refresh.</div></dl>
+        </article>
+        <article class="panel process-panel" id="processes">
+          <div class="panel-heading"><div><p class="eyebrow">LIVE ACTIVITY</p><h2>Top processes</h2></div><span class="process-count" id="process-count">— processes</span></div>
+          <div class="process-table-wrap"><table class="process-table"><thead><tr><th>USER</th><th>PROCESS</th><th>CPU</th><th>MEMORY</th></tr></thead><tbody id="process"><tr><td colspan="4" class="empty-state">Process data will appear after the first successful refresh.</td></tr></tbody></table></div>
+        </article>
+      </section>
+      <footer class="page-footer"><span>Linux Health Monitor</span><span>Automatic refresh every 10 seconds</span></footer>
+      <div class="toast" id="toast" role="alert" hidden></div>
+    </main>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
