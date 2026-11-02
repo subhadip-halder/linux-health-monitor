@@ -1,6 +1,6 @@
 # Linux Health Monitor
 
-A lightweight system monitoring dashboard for Linux. It combines small Bash collectors with a Flask web application and a responsive browser interface. The dashboard displays current CPU, memory, disk, network, host, and process information from the Linux machine on which the Flask service is running.
+A lightweight system monitoring dashboard for Linux. It combines small Bash collectors with a Flask web application and a responsive browser interface. The dashboard displays current CPU, memory, disk, network, host, and process information from the Linux machine on which the Flask service is running. To monitor your own computer, run the service on that computer and open its local dashboard at `http://127.0.0.1:5000`.
 
 This project is suitable for learning, local system checks, and classroom demonstrations. It is not a replacement for production monitoring platforms, alerting, or historical metrics storage.
 
@@ -33,7 +33,7 @@ Values are collected when the API is requested. This application does not store 
 
 ## How it works
 
-The browser loads the HTML, CSS, and JavaScript served by Flask. The JavaScript requests `GET /api/monitor`; Flask runs the Bash scripts in `scripts/`, gathers their output, and returns JSON. The browser parses the output and updates the dashboard.
+The browser loads the HTML, CSS, and JavaScript served by Flask. The JavaScript requests `GET /api/monitor`; Flask runs the Bash scripts in `scripts/` on the same computer, gathers their output, and returns JSON. The browser parses the output and updates the dashboard. Each person who wants to monitor their own Linux computer must run this service locally on that computer.
 
 The page and API use the same origin, so the browser does not need a separately configured API address or cross-origin access. The root URL `/` redirects to `/dashboard`.
 
@@ -70,7 +70,7 @@ Python packages are listed in `requirements.txt`:
 
 ## Run locally
 
-Open a terminal in the project directory.
+Run these steps on the Linux computer you want to monitor. Open a terminal in the project directory.
 
 1. (Optional, recommended) Create and activate a virtual environment:
 
@@ -142,7 +142,7 @@ For a classroom presentation, deploy and open the site a few minutes beforehand.
 
 ### Important: what the hosted metrics describe
 
-The public dashboard reports the Linux environment running the Flask service. On Render, that is the Render service's host/container, not the computer used to open the page. A browser-only GitHub Pages site cannot read metrics from a visitor's computer. To show a particular Linux computer's metrics to a remote class, the backend must run on that computer or on a server it can securely reach, and the dashboard must be configured to call that backend.
+The public dashboard reports the Linux environment running the Flask service. On Render, that is the Render service's host/container, not the computer used to open the page. A browser cannot read a visitor's processes, disk usage, or system files by itself. For each visitor to see their own computer's metrics, they must run this app locally and open its local URL. For a remotely hosted dashboard to inspect a visitor's computer, that computer would need a separate local monitoring agent and a secure connection to it; this project does not currently provide that agent.
 
 ## HTTP API
 

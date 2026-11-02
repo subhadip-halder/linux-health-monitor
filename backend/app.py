@@ -65,4 +65,6 @@ def monitor():
 
 if __name__ == "__main__":
     print("Linux Health Monitoring System Started!", flush=True)
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "5000")), debug=False)
+    # Keep the development server local: the metrics API exposes process and
+    # host details, and each user should run their own local monitor.
+    app.run(host="127.0.0.1", port=int(os.environ.get("PORT", "5000")), debug=False)
